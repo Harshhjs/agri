@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FarmConnect - Agricultural Marketplace</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green:#16a34a; --green-d:#15803d; --green-l:#dcfce7; --green-xl:#f0fdf4;
+  --text:#111827; --muted:#6b7280; --border:#e5e7eb; --white:#fff;
+  --red:#ef4444; --yellow:#eab308; --purple:#a855f7; --blue:#3b82f6;
+  --orange:#f97316; --sidebar:270px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--green-xl);color:var(--text);display:flex;min-height:100vh;}
+
+/* ── AUTH ── */
+#auth-screen{display:none;position:fixed;inset:0;background:linear-gradient(135deg,#f0fdf4,#dcfce7);z-index:500;align-items:center;justify-content:center;}
+#auth-screen.show{display:flex;}
+.auth-box{background:#fff;border-radius:20px;padding:40px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.1);}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo-icon{width:60px;height:60px;background:var(--green);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 10px;}
+.auth-logo-title{font-size:22px;font-weight:700;}
+.auth-logo-sub{font-size:13px;color:var(--muted);}
+.auth-tabs{display:flex;gap:0;margin-bottom:24px;background:#f9fafb;border-radius:10px;padding:4px;}
+.auth-tab{flex:1;padding:9px;text-align:center;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);transition:.15s;}
+.auth-tab.active{background:#fff;color:var(--green);box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.auth-form{display:none;}
+.auth-form.active{display:block;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--text);margin-bottom:5px;}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;outline:none;background:#fff;transition:border .15s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--green);}
+.fg textarea{min-height:100px;resize:vertical;}
+.auth-btn{width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s;}
+.auth-btn:hover{background:var(--green-d);}
+.auth-error{background:#fef2f2;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:14px;display:none;}
+.auth-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:16px;background:#f9fafb;padding:10px;border-radius:8px;}
+.auth-hint strong{color:var(--green);}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);min-height:100vh;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:18px 16px 14px;border-bottom:1px solid var(--border);}
+.logo-icon{width:38px;height:38px;background:var(--green);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;}
+.logo-text{font-size:16px;font-weight:700;line-height:1.2;}
+.logo-sub{font-size:11px;color:var(--muted);}
+.nav-label{padding:12px 14px 4px;font-size:10px;letter-spacing:1px;color:var(--muted);font-weight:600;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text);margin:1px 8px;transition:all .15s;}
+.nav-item:hover{background:var(--green-xl);color:var(--green);}
+.nav-item.active{background:var(--green-xl);color:var(--green);font-weight:600;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;}
+.nav-item.farmer-only{display:none;}
+.account-section{margin-top:auto;border-top:1px solid var(--border);padding:10px 8px 4px;}
+.user-card{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--green-xl);margin-bottom:6px;}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--green);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;}
+.user-name{font-size:13px;font-weight:700;line-height:1.2;}
+.user-role{font-size:11px;color:var(--muted);}
+.user-badges{display:flex;gap:4px;margin-top:2px;}
+.ub{font-size:10px;padding:1px 7px;border-radius:20px;font-weight:600;}
+.ub-admin{background:#f3e8ff;color:#7c3aed;}
+.ub-farmer{background:#fff7ed;color:#c2410c;}
+.ub-buyer{background:#eff6ff;color:#1d4ed8;}
+.ub-verified{background:var(--green-l);color:var(--green);}
+.logout-btn{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text);margin:0 8px 10px;background:none;width:calc(100% - 16px);transition:all .15s;font-family:inherit;}
+.logout-btn:hover{background:var(--green-xl);border-color:var(--green);color:var(--green);}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar);flex:1;min-height:100vh;padding:28px 32px;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.page-title{font-size:26px;font-weight:700;}
+.page-sub{font-size:14px;color:var(--green);font-weight:500;margin-top:3px;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .15s;font-family:inherit;}
+.btn-primary{background:var(--green);color:#fff;}
+.btn-primary:hover{background:var(--green-d);}
+.btn-outline{background:#fff;color:var(--text);border:1.5px solid var(--border);}
+.btn-outline:hover{border-color:var(--green);color:var(--green);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#dc2626;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+
+/* ── CARDS ── */
+.card{background:#fff;border-radius:14px;padding:22px;border:1px solid var(--border);}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:#fff;border-radius:14px;padding:20px;border:1px solid var(--border);}
+.stat-lbl{font-size:13px;color:var(--muted);display:flex;align-items:center;justify-content:space-between;}
+.stat-val{font-size:30px;font-weight:700;margin:5px 0 3px;}
+.stat-desc{font-size:12px;color:var(--green);font-weight:500;}
+
+/* ── PRODUCTS GRID ── */
+.products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.product-card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);transition:box-shadow .2s;}
+.product-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08);}
+.pc-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;}
+.pc-name{font-size:15px;font-weight:700;flex:1;margin-right:8px;}
+.tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:4px 0 8px;}
+.tag-fruits{background:#fef2f2;color:#dc2626;}
+.tag-seeds{background:#fefce8;color:#ca8a04;}
+.tag-fertilizer{background:#f3e8ff;color:#9333ea;}
+.tag-rice{background:#fff7ed;color:#ea580c;}
+.tag-equipment{background:#eff6ff;color:#0284c7;}
+.tag-vegetables{background:#f0fdf4;color:#16a34a;}
+.pc-desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+.price-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.pc-price{font-size:18px;font-weight:700;color:var(--green);}
+.pc-unit{font-size:11px;color:var(--muted);margin-left:2px;}
+.pc-qty{font-size:12px;color:var(--muted);}
+.pc-meta{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:4px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-premium{background:#fefce8;color:#ca8a04;border:1px solid #fde68a;}
+.badge-standard{background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;}
+
+/* ── SEARCH/FILTER ── */
+.filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.sw{position:relative;flex:1;min-width:200px;}
+.sw-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:15px;}
+.si{width:100%;padding:9px 14px 9px 34px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;outline:none;}
+.si:focus{border-color:var(--green);}
+.sel{padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;font-size:14px;font-family:inherit;outline:none;background:#fff;cursor:pointer;min-width:140px;}
+.sel:focus{border-color:var(--green);}
+
+/* ── PRICE TRENDS ── */
+.trends-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.trend-card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);}
+.trend-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.trend-cat{font-size:15px;font-weight:700;}
+.trend-cnt{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600;}
+.trend-price{font-size:26px;font-weight:700;}
+.trend-change{font-size:13px;font-weight:600;display:flex;align-items:center;gap:3px;}
+.trend-up{color:#16a34a;} .trend-down{color:#dc2626;}
+.trend-mv{display:flex;justify-content:space-between;font-size:13px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+
+/* ── WEATHER ── */
+.weather-main{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border-radius:16px;padding:28px;margin-bottom:20px;}
+.weather-temp{font-size:64px;font-weight:700;line-height:1;}
+.weather-desc{font-size:16px;opacity:.85;margin-top:6px;}
+.weather-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.weather-card{background:#fff;border-radius:12px;padding:16px;text-align:center;border:1px solid var(--border);}
+.weather-ic{font-size:28px;margin-bottom:6px;}
+.weather-val{font-size:18px;font-weight:700;}
+.weather-lbl{font-size:12px;color:var(--muted);margin-top:2px;}
+.forecast-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px;}
+.forecast-card{background:#fff;border-radius:12px;padding:16px;text-align:center;border:1px solid var(--border);}
+.forecast-date{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.forecast-temp{font-size:15px;font-weight:700;}
+.farming-tip{background:var(--green-xl);border:1px solid var(--green-l);border-radius:12px;padding:16px;margin-top:16px;}
+.farming-tip-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:6px;}
+.farming-tip-text{font-size:13px;color:var(--text);line-height:1.6;}
+
+/* ── KNOWLEDGE HUB ── */
+.kb-filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
+.kbf{padding:7px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:#fff;font-family:inherit;transition:.15s;display:flex;align-items:center;gap:5px;}
+.kbf.active{background:var(--green);color:#fff;border-color:var(--green);}
+.kbf:hover:not(.active){border-color:var(--green);color:var(--green);}
+.featured-article{display:grid;grid-template-columns:1fr 1fr;border-radius:14px;overflow:hidden;border:1px solid var(--border);margin-bottom:20px;}
+.featured-img{height:220px;background:linear-gradient(135deg,#16a34a,#4ade80);display:flex;align-items:center;justify-content:center;font-size:70px;}
+.featured-content{padding:24px;background:#fff;}
+.art-tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.art-tag-featured{background:var(--green-xl);color:var(--green);}
+.art-tag-time{background:#f3f4f6;color:var(--muted);}
+.articles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.article-card{background:#fff;border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+.article-img{height:120px;display:flex;align-items:center;justify-content:center;font-size:40px;}
+.article-body{padding:14px;}
+.article-cat{font-size:11px;font-weight:600;color:var(--green);margin-bottom:4px;}
+.article-title{font-size:14px;font-weight:700;margin-bottom:6px;line-height:1.3;}
+.article-meta{font-size:12px;color:var(--muted);}
+
+/* ── NEWS ── */
+.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.news-card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);}
+.news-tag{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:8px;}
+.news-tag-policy{background:#eff6ff;color:#2563eb;}
+.news-tag-market{background:#f0fdf4;color:#16a34a;}
+.news-tag-weather{background:#fff7ed;color:#ea580c;}
+.news-tag-tech{background:#f3e8ff;color:#9333ea;}
+.news-title{font-size:15px;font-weight:700;margin-bottom:6px;line-height:1.3;}
+.news-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+.news-date{font-size:12px;color:var(--muted);margin-top:10px;}
+
+/* ── CONTACT ── */
+.contact-grid{display:grid;grid-template-columns:1fr 1.6fr;gap:20px;}
+.contact-info-item{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-top:1px solid var(--border);}
+.contact-info-item:first-child{border-top:none;}
+.ci-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.ci-green{background:#dcfce7;}
+.ci-blue{background:#dbeafe;}
+.ci-purple{background:#f3e8ff;}
+.ci-orange{background:#ffedd5;}
+.ci-label{font-size:15px;font-weight:700;margin-bottom:3px;}
+.ci-val{font-size:14px;color:var(--text);}
+.ci-hint{font-size:12px;color:var(--muted);margin-top:1px;}
+.contact-form-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;margin-bottom:20px;}
+.form-2col{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+
+/* ── USER MANAGEMENT ── */
+.table-wrap{background:#fff;border-radius:14px;border:1px solid var(--border);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+th{background:var(--green-xl);padding:12px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+td{padding:13px 16px;border-top:1px solid var(--border);font-size:14px;vertical-align:middle;}
+tr:hover td{background:#fafafa;}
+.status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.s-active{background:#dcfce7;color:#16a34a;}
+.s-inactive{background:#fef2f2;color:#dc2626;}
+.role-badge{padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.r-admin{background:#f3e8ff;color:#9333ea;}
+.r-farmer{background:#fff7ed;color:#ea580c;}
+.r-buyer{background:#eff6ff;color:#2563eb;}
+
+/* ── SETTINGS ── */
+.settings-section{background:#fff;border-radius:14px;padding:22px;border:1px solid var(--border);margin-bottom:16px;}
+.settings-title{font-size:16px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);}
+.setting-row:first-of-type{border-top:none;padding-top:0;}
+.toggle{width:44px;height:24px;border-radius:12px;background:var(--border);position:relative;cursor:pointer;transition:background .2s;}
+.toggle.on{background:var(--green);}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;}
+.toggle.on::after{left:23px;}
+
+/* ── HOME ── */
+.hero{text-align:center;padding:50px 20px 36px;}
+.hero-icon{width:80px;height:80px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;margin:0 auto 18px;}
+.hero-title{font-size:52px;font-weight:700;color:var(--green);font-family:'Playfair Display',serif;margin-bottom:10px;}
+.hero-sub{font-size:17px;font-weight:600;margin-bottom:4px;}
+.hero-desc{font-size:15px;color:var(--green);font-weight:500;margin-bottom:26px;}
+.hero-btns{display:flex;gap:14px;justify-content:center;margin-bottom:28px;}
+.hbp{background:var(--green);color:#fff;padding:12px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:none;font-family:inherit;display:flex;align-items:center;gap:8px;}
+.hbp:hover{background:var(--green-d);}
+.hbo{background:#fff;color:var(--text);padding:12px 28px;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);font-family:inherit;display:flex;align-items:center;gap:8px;}
+.hbo:hover{border-color:var(--green);color:var(--green);}
+.hero-checks{display:flex;gap:24px;justify-content:center;font-size:14px;font-weight:500;}
+.hc{display:flex;align-items:center;gap:6px;}
+.home-features{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px;}
+.feature-card{background:#fff;border-radius:14px;padding:22px;border:1px solid var(--border);text-align:center;}
+.feature-icon{font-size:32px;margin-bottom:10px;}
+.feature-title{font-size:15px;font-weight:700;margin-bottom:6px;}
+.feature-desc{font-size:13px;color:var(--muted);line-height:1.6;}
+
+/* ── FARMER PRODUCTS ── */
+.my-products-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.my-prod-card{background:#fff;border-radius:12px;padding:18px;border:1px solid var(--border);}
+.my-prod-actions{display:flex;gap:8px;margin-top:12px;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:#fff;border-radius:18px;padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:18px;font-weight:700;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:500;z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;max-width:320px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.success{background:var(--green);}
+.toast.error{background:var(--red);}
+
+/* ── LOADING ── */
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);gap:10px;font-size:15px;}
+.spinner{width:20px;height:20px;border:2.5px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── EMPTY STATE ── */
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
+.empty-state-icon{font-size:48px;margin-bottom:12px;opacity:.5;}
+.empty-state h3{font-size:17px;font-weight:600;color:var(--text);margin-bottom:6px;}
+.empty-state p{font-size:14px;}
+
+/* ── MISC ── */
+section.card{margin-bottom:20px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.sec-title{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.text-muted{color:var(--muted);}
+.text-green{color:var(--green);}
+.text-red{color:var(--red);}
+.font-bold{font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- ─── AUTH SCREEN ─── -->
+<div id="auth-screen" class="show">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">🌱</div>
+      <div class="auth-logo-title">FarmConnect</div>
+      <div class="auth-logo-sub">Agricultural Marketplace</div>
+    </div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Login</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+    <div id="auth-error" class="auth-error"></div>
+
+    <!-- LOGIN -->
+    <div id="form-login" class="auth-form active">
+      <div class="fg"><label>Email Address</label><input type="email" id="l-email" placeholder="your@email.com" autocomplete="email"></div>
+      <div class="fg"><label>Password</label><input type="password" id="l-password" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="auth-btn" onclick="handleLogin()">Login to FarmConnect</button>
+      <div class="auth-hint">
+        Demo: <strong>harsh@farmconnect.in</strong> / admin123 &nbsp;|&nbsp;
+        <strong>ramesh@gmail.com</strong> / farmer123
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="form-register" class="auth-form">
+      <div class="form-row">
+        <div class="fg"><label>Full Name *</label><input type="text" id="r-name" placeholder="Your name"></div>
+        <div class="fg"><label>Email *</label><input type="email" id="r-email" placeholder="you@email.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Password *</label><input type="password" id="r-password" placeholder="Min 6 chars"></div>
+        <div class="fg">
+          <label>I am a *</label>
+          <select id="r-role"><option value="buyer">Buyer</option><option value="farmer">Farmer</option></select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="fg"><label>Phone</label><input type="tel" id="r-phone" placeholder="Phone number"></div>
+        <div class="fg"><label>Location</label><input type="text" id="r-location" placeholder="City, State"></div>
+      </div>
+      <button class="auth-btn" onclick="handleRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── SIDEBAR ─── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🌱</div>
+    <div><div class="logo-text">FarmConnect</div><div class="logo-sub">Agricultural Marketplace</div></div>
+  </div>
+  <div class="nav-label">NAVIGATION</div>
+  <div class="nav-item active" data-page="home" onclick="navigate('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Home
+  </div>
+  <div class="nav-item" data-page="dashboard" onclick="navigate('dashboard')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard
+  </div>
+  <div class="nav-item" data-page="marketplace" onclick="navigate('marketplace')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>Marketplace
+  </div>
+  <div class="nav-item farmer-only" data-page="my-products" onclick="navigate('my-products')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>My Products
+  </div>
+  <div class="nav-item" data-page="pricetrends" onclick="navigate('pricetrends')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Price Trends
+  </div>
+  <div class="nav-item" data-page="weather" onclick="navigate('weather')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg>Weather
+  </div>
+  <div class="nav-item" data-page="knowledge" onclick="navigate('knowledge')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>Knowledge Hub
+  </div>
+  <div class="nav-item" data-page="news" onclick="navigate('news')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>News
+  </div>
+  <div class="nav-item" data-page="contact" onclick="navigate('contact')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Contact
+  </div>
+  <div class="nav-item admin-only" data-page="users" onclick="navigate('users')" style="display:none">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>User Management
+  </div>
+  <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2"/></svg>Settings
+  </div>
+
+  <div class="account-section">
+    <div class="nav-label">ACCOUNT</div>
+    <div class="user-card" id="sidebar-user">
+      <div class="user-avatar" id="sidebar-avatar">HC</div>
+      <div>
+        <div class="user-name" id="sidebar-name">Harsh Choudhary</div>
+        <div class="user-badges" id="sidebar-badges">
+          <span class="ub ub-admin">Admin</span>
+          <span class="ub ub-verified">✓ Verified</span>
+        </div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="handleLogout()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Logout
+    </button>
+  </div>
+</aside>
+
+<!-- ─── MAIN CONTENT ─── -->
+<main class="main">
+
+  <!-- HOME -->
+  <div id="page-home" class="page">
+    <div class="hero">
+      <div class="hero-icon">🌱</div>
+      <div class="hero-title">AgriTrade</div>
+      <div class="hero-sub">🌾 Connecting Farmers & Traders Directly 🌾</div>
+      <div class="hero-desc">Farm to Market, Without Middlemen</div>
+      <div class="hero-btns">
+        <button class="hbp" onclick="navigate('dashboard')">Go to Dashboard →</button>
+        <button class="hbo" onclick="navigate('marketplace')">Browse Marketplace 🛒</button>
+      </div>
+      <div class="hero-checks">
+        <div class="hc"><span class="text-green">✓</span> 100% Verified Farmers</div>
+        <div class="hc"><span class="text-green">✓</span> Secure Payments</div>
+        <div class="hc"><span class="text-green">✓</span> Direct Trade</div>
+      </div>
+    </div>
+    <div class="home-features">
+      <div class="feature-card"><div class="feature-icon">🛒</div><div class="feature-title">Agricultural Marketplace</div><div class="feature-desc">Buy and sell crops, seeds, fertilizers, and equipment directly from verified farmers.</div></div>
+      <div class="feature-card"><div class="feature-icon">📈</div><div class="feature-title">Live Price Trends</div><div class="feature-desc">Track real-time commodity prices and market insights to make informed decisions.</div></div>
+      <div class="feature-card"><div class="feature-icon">🌤️</div><div class="feature-title">Weather Forecast</div><div class="feature-desc">Get live weather forecasts and farming advice for your specific region.</div></div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title" id="dash-title">Welcome back!</div>
+        <div class="page-sub">Admin Dashboard</div>
+      </div>
+      <button class="btn btn-primary" onclick="navigate('marketplace')">🛒 Browse Marketplace</button>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-lbl">Total Products <span style="font-size:20px">📦</span></div>
+        <div class="stat-val" id="stat-products">–</div>
+        <div class="stat-desc">Available in marketplace</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Total Users <span style="font-size:20px">👥</span></div>
+        <div class="stat-val" id="stat-users">–</div>
+        <div class="stat-desc">Registered users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Market Activity <span style="font-size:20px;color:var(--purple)">↗</span></div>
+        <div class="stat-val">Active</div>
+        <div class="stat-desc">Growing marketplace</div>
+      </div>
+    </div>
+    <section class="card">
+      <div class="sec-head">
+        <div class="sec-title">🌱 Recent Products</div>
+        <button class="btn btn-outline" onclick="navigate('marketplace')">View All</button>
+      </div>
+      <div class="products-grid" id="dash-products"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+    </section>
+  </div>
+
+  <!-- MARKETPLACE -->
+  <div id="page-marketplace" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Agricultural Marketplace</div>
+        <div class="page-sub">Discover quality farming products from verified sellers</div>
+      </div>
+    </div>
+    <section class="card" style="margin-bottom:16px">
+      <div class="filter-row">
+        <div class="sw"><span class="sw-icon">🔍</span><input class="si" id="mp-search" type="text" placeholder="Search for products..." oninput="filterProducts()"></div>
+        <select class="sel" id="mp-cat" onchange="filterProducts()">
+          <option value="">All Categories</option>
+          <option value="fruits">Fruits</option>
+          <option value="seeds">Seeds</option>
+          <option value="fertilizer">Fertilizer</option>
+          <option value="rice">Rice</option>
+          <option value="equipment">Equipment</option>
+          <option value="vegetables">Vegetables</option>
+        </select>
+        <select class="sel" id="mp-loc" onchange="filterProducts()">
+          <option value="">All Locations</option>
+          <option value="Himachal Pradesh">Himachal Pradesh</option>
+          <option value="Haryana">Haryana</option>
+          <option value="Karnataka">Karnataka</option>
+          <option value="Punjab">Punjab</option>
+          <option value="Maharashtra">Maharashtra</option>
+          <option value="Rajasthan">Rajasthan</option>
+          <option value="Gujarat">Gujarat</option>
+          <option value="Odisha">Odisha</option>
+        </select>
+      </div>
+    </section>
+    <div style="margin-bottom:12px;font-size:14px;color:var(--muted)" id="mp-count"></div>
+    <div class="products-grid" id="mp-products"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- MY PRODUCTS (Farmer) -->
+  <div id="page-my-products" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">📋 My Products</div>
+        <div class="page-sub">Manage your listed products</div>
+      </div>
+      <button class="btn btn-primary" onclick="openProductModal()">+ List New Product</button>
+    </div>
+    <div class="products-grid" id="my-products-grid"><div class="loading"><div class="spinner"></div>Loading...</div></div>
+  </div>
+
+  <!-- PRICE TRENDS -->
+  <div id="page-pricetrends" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">📊 Market Price Trends</div>
+        <div class="page-sub">Live agricultural commodity prices and market insights</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="showToast('AI market analysis coming soon!','success')">↗ AI Market Analysis</button>
+        <button class="btn btn-outline" onclick="loadTrends()">↺ Refresh</button>
+      </div>
+    </div>
+    <section class="card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:14px;font-weight:600">Filter by Category:</span>
+        <select class="sel" id="trend-filter" onchange="filterTrends()">
+          <option value="">All Categories</option>
+          <option value="Fruits">Fruits</option>
+          <option value="Seeds">Seeds</option>
+          <option value="Fertilizer">Fertilizer</option>
+          <option value="Rice">Rice</option>
+          <option value="Equipment">Equipment</option>
+          <option value="Vegetables">Vegetables</option>
+        </select>
+      </div>
+    </section>
+    <div class="trends-grid" id="trends-grid"></div>
+  </div>
+
+  <!-- WEATHER -->
+  <div id="page-weather" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">☁️ Weather Forecast</div>
+        <div class="page-sub">Live weather updates and farming insights</div>
+      </div>
+    </div>
+    <section class="card" style="margin-bottom:20px">
+      <div style="display:flex;gap:12px">
+        <input class="si" id="weather-city" type="text" placeholder="Enter your location (e.g., Delhi, Mumbai, Bangalore)" style="flex:1;padding-left:14px" onkeydown="if(event.key==='Enter')getWeather()">
+        <button class="btn btn-primary" onclick="getWeather()">📍 Get Weather</button>
+      </div>
+    </section>
+    <div id="weather-empty" class="empty-state">
+      <div class="empty-state-icon">☁️</div>
+      <h3>Enter Your Location</h3>
+      <p>Get personalized weather forecasts and farming advice for your area</p>
+    </div>
+    <div id="weather-result" style="display:none"></div>
+  </div>
+
+  <!-- KNOWLEDGE HUB -->
+  <div id="page-knowledge" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">📖 Knowledge Hub</div>
+        <div class="page-sub">Learn, Grow, and Succeed with Expert Agricultural Knowledge</div>
+      </div>
+    </div>
+    <section class="card" style="margin-bottom:20px">
+      <div class="sw"><span class="sw-icon">🔍</span><input class="si" id="kb-search" type="text" placeholder="Search articles..." oninput="filterArticles(this.value)"></div>
+      <div class="kb-filters">
+        <button class="kbf active" onclick="setKbFilter('all',this)">📖 All Articles</button>
+        <button class="kbf" onclick="setKbFilter('Farming Tips',this)">🌾 Farming Tips</button>
+        <button class="kbf" onclick="setKbFilter('Government Schemes',this)">🏛️ Government Schemes</button>
+        <button class="kbf" onclick="setKbFilter('Success Stories',this)">↗ Success Stories</button>
+        <button class="kbf" onclick="setKbFilter('Seasonal Guide',this)">📅 Seasonal Guide</button>
+        <button class="kbf" onclick="setKbFilter('Marketing',this)">💲 Marketing</button>
+      </div>
+    </section>
+    <div class="featured-article">
+      <div class="featured-img">🌽</div>
+      <div class="featured-content">
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <span class="art-tag art-tag-featured">Featured Article</span>
+          <span class="art-tag art-tag-time">5 min read</span>
+        </div>
+        <div style="font-size:20px;font-weight:700;margin-bottom:8px;line-height:1.3">10 Essential Farming Tips for Beginners</div>
+        <div style="font-size:14px;color:var(--muted);line-height:1.6;margin-bottom:14px">Starting your farming journey? Here are the most important tips every new farmer should know to ensure success in their first season.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">👤 Dr. Rajesh &nbsp;·&nbsp; 📅 Dec 15, 2024</div>
+        <button class="btn btn-primary" onclick="showToast('Opening article...')">Read More →</button>
+      </div>
+    </div>
+    <div class="articles-grid" id="articles-grid"></div>
+  </div>
+
+  <!-- NEWS -->
+  <div id="page-news" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">📰 Agricultural News</div>
+        <div class="page-sub">Stay updated with the latest farming news and policies</div>
+      </div>
+    </div>
+    <div class="news-grid" id="news-grid"></div>
+  </div>
+
+  <!-- CONTACT -->
+  <div id="page-contact" class="page">
+    <div class="page-header" style="text-align:center;display:block">
+      <div class="page-title">Contact & Support</div>
+      <div class="page-sub" style="font-size:16px">We're here to help you grow your agricultural business</div>
+    </div>
+    <div class="contact-grid">
+      <!-- Left: Info -->
+      <section class="card">
+        <div style="font-size:18px;font-weight:700;margin-bottom:16px">Get in Touch</div>
+        <div class="contact-info-item">
+          <div class="ci-icon ci-green">📞</div>
+          <div>
+            <div class="ci-label">Phone Support</div>
+            <div class="ci-val">93047827476</div>
+            <div class="ci-hint">Mon-Sat: 9 AM - 6 PM</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="ci-icon ci-blue">✉️</div>
+          <div>
+            <div class="ci-label">Email Support</div>
+            <div class="ci-val">support@agritrade.com</div>
+            <div class="ci-hint">Response within 24 hours</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="ci-icon ci-purple">📍</div>
+          <div>
+            <div class="ci-label">Office Address</div>
+            <div class="ci-val">Agriculture Hub</div>
+            <div class="ci-val">New Delhi, India</div>
+          </div>
+        </div>
+        <div class="contact-info-item">
+          <div class="ci-icon ci-orange">🕐</div>
+          <div>
+            <div class="ci-label">Working Hours</div>
+            <div class="ci-val">Monday - Saturday</div>
+            <div class="ci-hint">9:00 AM - 6:00 PM IST</div>
+          </div>
+        </div>
+      </section>
+      <!-- Right: Form -->
+      <section class="card">
+        <div class="contact-form-title">💬 Send us a Message</div>
+        <div id="contact-success" style="display:none;background:#dcfce7;color:#15803d;padding:12px 16px;border-radius:10px;font-size:14px;font-weight:500;margin-bottom:16px;">✅ Message sent successfully! We'll reply within 24 hours.</div>
+        <div class="form-2col">
+          <div class="fg"><label>Full Name *</label><input type="text" id="c-name" placeholder="Your full name"></div>
+          <div class="fg"><label>Email Address *</label><input type="email" id="c-email" placeholder="email@example.com"></div>
+        </div>
+        <div class="form-2col">
+          <div class="fg"><label>Phone Number</label><input type="tel" id="c-phone" placeholder="+91 XXXXX XXXXX"></div>
+          <div class="fg"><label>Subject *</label><input type="text" id="c-subject" placeholder="How can we help?"></div>
+        </div>
+        <div class="fg"><label>Message *</label><textarea id="c-msg" placeholder="Write your message here..."></textarea></div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;font-size:15px;padding:12px" onclick="submitContact()">✉️ Send Message</button>
+      </section>
+    </div>
+  </div>
+
+  <!-- USER MANAGEMENT -->
+  <div id="page-users" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">👥 User Management</div>
+        <div class="page-sub">Manage registered users on the platform</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAddUserModal()">+ Add User</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th><th>Role</th><th>Location</th><th>Joined</th><th>Status</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-table"><tr><td colspan="6"><div class="loading"><div class="spinner"></div>Loading...</div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="page-settings" class="page">
+    <div class="page-header">
+      <div>
+        <div class="page-title">⚙️ Settings</div>
+        <div class="page-sub">Manage your account and preferences</div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Profile Information</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="fg" style="margin-bottom:0"><label>Full Name</label><input class="form-input" id="s-name" type="text"></div>
+        <div class="fg" style="margin-bottom:0"><label>Email</label><input class="form-input" id="s-email" type="email" disabled style="background:#f9fafb;color:var(--muted)"></div>
+        <div class="fg" style="margin-bottom:0"><label>Phone</label><input class="form-input" id="s-phone" type="tel"></div>
+        <div class="fg" style="margin-bottom:0"><label>Location</label><input class="form-input" id="s-location" type="text"></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="saveProfile()">Save Changes</button>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Notifications</div>
+      <div class="setting-row">
+        <div><div style="font-weight:600">Email Notifications</div><div style="font-size:12px;color:var(--muted)">Order and price alerts via email</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div><div style="font-weight:600">SMS Alerts</div><div style="font-size:12px;color:var(--muted)">Instant SMS for important updates</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div><div style="font-weight:600">Market Price Alerts</div><div style="font-size:12px;color:var(--muted)">Notify when commodity prices change</div></div>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="setting-row">
+        <div><div style="font-weight:600">Weather Warnings</div><div style="font-size:12px;color:var(--muted)">Severe weather alerts for your region</div></div>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Change Password</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+        <div class="fg" style="margin-bottom:0"><label>Current Password</label><input class="form-input" id="s-cur-pw" type="password" placeholder="••••••••"></div>
+        <div class="fg" style="margin-bottom:0"><label>New Password</label><input class="form-input" id="s-new-pw" type="password" placeholder="••••••••"></div>
+        <div class="fg" style="margin-bottom:0"><label>Confirm Password</label><input class="form-input" id="s-con-pw" type="password" placeholder="••••••••"></div>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="changePassword()">Update Password</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- ─── PRODUCT MODAL (add/edit) ─── -->
+<div class="modal-overlay" id="modal-product">
+  <div class="modal">
+    <div class="modal-title" id="modal-product-title">List New Product</div>
+    <input type="hidden" id="edit-product-id">
+    <div class="form-row">
+      <div class="fg"><label>Product Name *</label><input type="text" id="p-name" placeholder="e.g., Apple (Shimla)"></div>
+      <div class="fg">
+        <label>Category *</label>
+        <select id="p-cat">
+          <option value="fruits">Fruits</option>
+          <option value="seeds">Seeds</option>
+          <option value="fertilizer">Fertilizer</option>
+          <option value="rice">Rice</option>
+          <option value="equipment">Equipment</option>
+          <option value="vegetables">Vegetables</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Description</label><textarea id="p-desc" placeholder="Describe your product..." style="min-height:80px"></textarea></div>
+    <div class="form-row">
+      <div class="fg"><label>Price (₹) *</label><input type="number" id="p-price" placeholder="0"></div>
+      <div class="fg">
+        <label>Unit *</label>
+        <select id="p-unit"><option value="kg">kg</option><option value="quintal">quintal</option><option value="ton">ton</option><option value="piece">piece</option><option value="litre">litre</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Available Quantity *</label><input type="number" id="p-qty" placeholder="0"></div>
+      <div class="fg">
+        <label>Tier</label>
+        <select id="p-tier"><option value="standard">Standard</option><option value="premium">Premium</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Location</label><input type="text" id="p-loc" placeholder="State, India"></div>
+      <div class="fg"><label>Contact Phone</label><input type="tel" id="p-phone" placeholder="Phone number"></div>
+    </div>
+    <div class="fg"><label>Harvest Date</label><input type="date" id="p-harvest"></div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal('modal-product')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── ADD USER MODAL ─── -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-title">Add New User</div>
+    <div class="form-row">
+      <div class="fg"><label>Full Name *</label><input type="text" id="nu-name" placeholder="Full name"></div>
+      <div class="fg"><label>Email *</label><input type="email" id="nu-email" placeholder="email@example.com"></div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Password *</label><input type="password" id="nu-password" placeholder="Min 6 chars"></div>
+      <div class="fg">
+        <label>Role *</label>
+        <select id="nu-role"><option value="buyer">Buyer</option><option value="farmer">Farmer</option><option value="admin">Admin</option></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="fg"><label>Phone</label><input type="tel" id="nu-phone" placeholder="Phone"></div>
+      <div class="fg"><label>Location</label><input type="text" id="nu-location" placeholder="City, State"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-outline" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button class="btn btn-primary" onclick="addUser()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TOAST ─── -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════
+let token = localStorage.getItem('fc_token');
+let currentUser = null;
+let allProducts = [];
+let myProducts = [];
+let trendData = [];
+let kbFilter = 'all';
+let editingProductId = null;
+
+// ════════════════════════════════════════════
+//  API HELPER
+// ════════════════════════════════════════════
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (token) opts.headers['Authorization'] = `Bearer ${token}`;
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch('/api' + path, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Request failed');
+  return data;
+}
+
+// ════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => t.classList.toggle('active', (i === 0) === (tab === 'login')));
+  document.querySelectorAll('.auth-form').forEach((f, i) => f.classList.toggle('active', (i === 0) === (tab === 'login')));
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('l-email').value.trim();
+  const password = document.getElementById('l-password').value;
+  if (!email || !password) return showAuthError('Please enter email and password');
+  try {
+    const data = await api('POST', '/auth/login', { email, password });
+    token = data.token;
+    localStorage.setItem('fc_token', token);
+    currentUser = data.user;
+    initApp();
+  } catch (err) {
+    showAuthError(err.message);
+  }
+}
+
+async function handleRegister() {
+  const name = document.getElementById('r-name').value.trim();
+  const email = document.getElementById('r-email').value.trim();
+  const password = document.getElementById('r-password').value;
+  const role = document.getElementById('r-role').value;
+  const phone = document.getElementById('r-phone').value.trim();
+  const location = document.getElementById('r-location').value.trim();
+  if (!name || !email || !password) return showAuthError('Please fill all required fields');
+  try {
+    const data = await api('POST', '/auth/register', { name, email, password, role, phone, location });
+    token = data.token;
+    localStorage.setItem('fc_token', token);
+    currentUser = data.user;
+    initApp();
+    showToast('Account created successfully!', 'success');
+  } catch (err) {
+    showAuthError(err.message);
+  }
+}
+
+function handleLogout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('fc_token');
+  document.getElementById('auth-screen').classList.add('show');
+  document.getElementById('sidebar').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+  showToast('Logged out successfully');
+}
+
+async function initApp() {
+  document.getElementById('auth-screen').classList.remove('show');
+  document.getElementById('sidebar').style.display = 'flex';
+  document.querySelector('.main').style.display = 'block';
+
+  // Load user if we have token but no currentUser
+  if (token && !currentUser) {
+    try { currentUser = await api('GET', '/auth/me'); } catch { handleLogout(); return; }
+  }
+
+  updateSidebar();
+  await loadDashboard();
+  await loadProducts();
+  renderTrends();
+  renderArticles();
+  renderNews();
+
+  // Pre-fill settings
+  if (currentUser) {
+    document.getElementById('s-name').value = currentUser.name || '';
+    document.getElementById('s-email').value = currentUser.email || '';
+    document.getElementById('s-phone').value = currentUser.phone || '';
+    document.getElementById('s-location').value = currentUser.location || '';
+  }
+
+  navigate('home');
+}
+
+function updateSidebar() {
+  if (!currentUser) return;
+  const initials = currentUser.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('sidebar-avatar').textContent = initials;
+  document.getElementById('sidebar-name').textContent = currentUser.name;
+
+  const roleClass = { admin: 'ub-admin', farmer: 'ub-farmer', buyer: 'ub-buyer' };
+  let badges = `<span class="ub ${roleClass[currentUser.role]}">${currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1)}</span>`;
+  if (currentUser.verified) badges += `<span class="ub ub-verified">✓ Verified</span>`;
+  document.getElementById('sidebar-badges').innerHTML = badges;
+
+  // Show admin-only items
+  document.querySelectorAll('.admin-only').forEach(el => el.style.display = currentUser.role === 'admin' ? 'flex' : 'none');
+  // Show farmer-only items
+  document.querySelectorAll('.farmer-only').forEach(el => el.style.display = ['farmer', 'admin'].includes(currentUser.role) ? 'flex' : 'none');
+
+  // Dashboard subtitle
+  const roleLabels = { admin: 'Admin Dashboard', farmer: 'Farmer Dashboard', buyer: 'Buyer Dashboard' };
+  document.querySelector('#page-dashboard .page-sub').textContent = roleLabels[currentUser.role] || 'Dashboard';
+  document.getElementById('dash-title').textContent = `Welcome back, ${currentUser.name.split(' ')[0]}!`;
+}
+
+// ════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (!el) return;
+  el.classList.add('active');
+  const ni = document.querySelector(`[data-page="${page}"]`);
+  if (ni) ni.classList.add('active');
+  window.scrollTo(0, 0);
+
+  if (page === 'users') loadUsers();
+  if (page === 'my-products') loadMyProducts();
+}
+
+// ════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════
+async function loadDashboard() {
+  try {
+    const stats = await api('GET', '/stats');
+    document.getElementById('stat-products').textContent = stats.products;
+    document.getElementById('stat-users').textContent = currentUser.role === 'admin' ? stats.users : '–';
+  } catch {}
+  try {
+    const products = await api('GET', '/products');
+    allProducts = products;
+    const el = document.getElementById('dash-products');
+    el.innerHTML = products.slice(0, 6).map(p => productCardHTML(p, false)).join('');
+  } catch { document.getElementById('dash-products').innerHTML = '<div class="empty-state"><p>Failed to load products</p></div>'; }
+}
+
+// ════════════════════════════════════════════
+//  PRODUCTS
+// ════════════════════════════════════════════
+function fprice(p) { return '₹' + parseFloat(p).toLocaleString('en-IN'); }
+
+function tagCls(cat) {
+  return { fruits: 'tag-fruits', seeds: 'tag-seeds', fertilizer: 'tag-fertilizer', rice: 'tag-rice', equipment: 'tag-equipment', vegetables: 'tag-vegetables' }[cat] || 'tag-seeds';
+}
+
+function productCardHTML(p, showBtn = true) {
+  return `<div class="product-card">
+    <div class="pc-head">
+      <div class="pc-name">${p.name}</div>
+      <span class="badge badge-${p.tier || 'standard'}">⭐ ${p.tier || 'standard'}</span>
+    </div>
+    <span class="tag ${tagCls(p.category)}">${p.category}</span>
+    ${p.description ? `<div class="pc-desc">${p.description}</div>` : ''}
+    <div class="price-row">
+      <div><span class="pc-price">${fprice(p.price)}</span><span class="pc-unit">per ${p.unit || 'kg'}</span></div>
+      <div class="pc-qty">📦 ${p.quantity} ${p.unit || 'kg'}</div>
+    </div>
+    <div class="pc-meta">📍 ${p.location || '–'}</div>
+    ${p.harvest_date ? `<div class="pc-meta">📅 Harvested: ${p.harvest_date}</div>` : ''}
+    ${p.phone ? `<div class="pc-meta">📞 ${p.phone}</div>` : ''}
+    ${p.seller_name ? `<div class="pc-meta">👤 ${p.seller_name}</div>` : ''}
+    ${showBtn ? `<button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:12px" onclick="showToast('${p.name} added to cart!','success')">🛒 Add to Cart</button>` : ''}
+  </div>`;
+}
+
+async function loadProducts() {
+  try {
+    allProducts = await api('GET', '/products');
+    renderMarketplace(allProducts);
+  } catch { document.getElementById('mp-products').innerHTML = '<div class="empty-state"><p>Failed to load products</p></div>'; }
+}
+
+function renderMarketplace(list) {
+  const el = document.getElementById('mp-products');
+  document.getElementById('mp-count').innerHTML = `Showing <strong>${list.length}</strong> products`;
+  el.innerHTML = list.length ? list.map(p => productCardHTML(p)).join('') : '<div class="empty-state"><div class="empty-state-icon">📦</div><h3>No products found</h3><p>Try adjusting your filters</p></div>';
+}
+
+function filterProducts() {
+  const q = document.getElementById('mp-search').value.toLowerCase();
+  const cat = document.getElementById('mp-cat').value;
+  const loc = document.getElementById('mp-loc').value;
+  const filtered = allProducts.filter(p =>
+    (!q || p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)) &&
+    (!cat || p.category === cat) &&
+    (!loc || (p.location || '').includes(loc))
+  );
+  renderMarketplace(filtered);
+}
+
+// ─ My Products (Farmer) ─
+async function loadMyProducts() {
+  document.getElementById('my-products-grid').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+  try {
+    myProducts = await api('GET', '/products/my');
+    renderMyProducts();
+  } catch { document.getElementById('my-products-grid').innerHTML = '<div class="empty-state"><p>Failed to load products</p></div>'; }
+}
+
+function renderMyProducts() {
+  const el = document.getElementById('my-products-grid');
+  if (!myProducts.length) {
+    el.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div class="empty-state-icon">📦</div><h3>No products listed yet</h3><p>Click "List New Product" to get started</p></div>';
+    return;
+  }
+  el.innerHTML = myProducts.map(p => `
+    <div class="product-card">
+      <div class="pc-head"><div class="pc-name">${p.name}</div><span class="badge badge-${p.tier || 'standard'}">⭐ ${p.tier || 'standard'}</span></div>
+      <span class="tag ${tagCls(p.category)}">${p.category}</span>
+      <div class="pc-desc">${p.description || ''}</div>
+      <div class="price-row">
+        <div><span class="pc-price">${fprice(p.price)}</span><span class="pc-unit">per ${p.unit || 'kg'}</span></div>
+        <div class="pc-qty">📦 ${p.quantity}</div>
+      </div>
+      <div class="pc-meta">📍 ${p.location || '–'}</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-outline btn-sm" style="flex:1;justify-content:center" onclick="openProductModal(${p.id})">✏️ Edit</button>
+        <button class="btn btn-red btn-sm" style="flex:1;justify-content:center" onclick="deleteProduct(${p.id})">🗑 Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function openProductModal(id) {
+  editingProductId = id || null;
+  document.getElementById('modal-product-title').textContent = id ? 'Edit Product' : 'List New Product';
+  if (id) {
+    const p = myProducts.find(x => x.id === id);
+    if (p) {
+      document.getElementById('p-name').value = p.name;
+      document.getElementById('p-cat').value = p.category;
+      document.getElementById('p-desc').value = p.description || '';
+      document.getElementById('p-price').value = p.price;
+      document.getElementById('p-unit').value = p.unit || 'kg';
+      document.getElementById('p-qty').value = p.quantity;
+      document.getElementById('p-tier').value = p.tier || 'standard';
+      document.getElementById('p-loc').value = p.location || '';
+      document.getElementById('p-phone').value = p.phone || '';
+      document.getElementById('p-harvest').value = p.harvest_date || '';
+    }
+  } else {
+    ['p-name','p-desc','p-price','p-qty','p-loc','p-phone','p-harvest'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-cat').value = 'fruits';
+    document.getElementById('p-unit').value = 'kg';
+    document.getElementById('p-tier').value = 'standard';
+  }
+  document.getElementById('modal-product').classList.add('open');
+}
+
+async function saveProduct() {
+  const data = {
+    name: document.getElementById('p-name').value.trim(),
+    category: document.getElementById('p-cat').value,
+    description: document.getElementById('p-desc').value.trim(),
+    price: document.getElementById('p-price').value,
+    unit: document.getElementById('p-unit').value,
+    quantity: document.getElementById('p-qty').value,
+    tier: document.getElementById('p-tier').value,
+    location: document.getElementById('p-loc').value.trim(),
+    phone: document.getElementById('p-phone').value.trim(),
+    harvest_date: document.getElementById('p-harvest').value || null,
+  };
+  if (!data.name || !data.price) return showToast('Please fill required fields', 'error');
+  try {
+    if (editingProductId) {
+      await api('PUT', `/products/${editingProductId}`, data);
+      showToast('Product updated!', 'success');
+    } else {
+      await api('POST', '/products', data);
+      showToast('Product listed!', 'success');
+    }
+    closeModal('modal-product');
+    await loadMyProducts();
+    await loadProducts();
+    await loadDashboard();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteProduct(id) {
+  if (!confirm('Delete this product?')) return;
+  try {
+    await api('DELETE', `/products/${id}`);
+    showToast('Product deleted', 'success');
+    await loadMyProducts();
+    await loadProducts();
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ════════════════════════════════════════════
+//  PRICE TRENDS
+// ════════════════════════════════════════════
+function loadTrends() {
+  trendData = [
+    { cat:'Fruits', items:2, avg:175, change:1.7, up:true, mv:57500, col:'#fef2f2', tcol:'#dc2626' },
+    { cat:'Seeds', items:3, avg:40, change:2.2, up:true, mv:44000, col:'#fefce8', tcol:'#ca8a04' },
+    { cat:'Fertilizer', items:2, avg:15, change:2.0, up:false, mv:45000, col:'#f3e8ff', tcol:'#9333ea' },
+    { cat:'Rice', items:2, avg:120, change:3.9, up:false, mv:120000, col:'#fff7ed', tcol:'#ea580c' },
+    { cat:'Equipment', items:1, avg:450000, change:5.9, up:false, mv:450000, col:'#eff6ff', tcol:'#2563eb' },
+    { cat:'Vegetables', items:2, avg:25, change:2.1, up:false, mv:12500, col:'#f0fdf4', tcol:'#16a34a' },
+  ];
+  renderTrends(trendData);
+}
+
+function renderTrends(list) {
+  document.getElementById('trends-grid').innerHTML = list.map(t => `
+    <div class="trend-card">
+      <div class="trend-head">
+        <div class="trend-cat">${t.cat}</div>
+        <span class="trend-cnt" style="background:${t.col};color:${t.tcol}">${t.items} items</span>
+      </div>
+      <div class="trend-price">${fprice(t.avg)}</div>
+      <div class="trend-change ${t.up ? 'trend-up' : 'trend-down'}">${t.up ? '↗' : '↘'} ${t.up ? '+' : '-'}${t.change}% vs last week</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px">Average Price</div>
+      <div class="trend-mv"><span class="text-muted">Market Value:</span><span class="font-bold">${fprice(t.mv)}</span></div>
+    </div>`).join('');
+}
+
+function filterTrends() {
+  const f = document.getElementById('trend-filter').value;
+  renderTrends(f ? trendData.filter(t => t.cat === f) : trendData);
+}
+
+// ════════════════════════════════════════════
+//  WEATHER
+// ════════════════════════════════════════════
+async function getWeather() {
+  const city = document.getElementById('weather-city').value.trim();
+  if (!city) return showToast('Please enter a location', 'error');
+  document.getElementById('weather-empty').style.display = 'none';
+  document.getElementById('weather-result').style.display = 'block';
+  document.getElementById('weather-result').innerHTML = '<div class="loading"><div class="spinner"></div>Fetching weather data...</div>';
+  try {
+    const w = await api('GET', `/weather?city=${encodeURIComponent(city)}`);
+    const temp = parseInt(w.temp_c);
+    let farmTip = '';
+    if (temp <= 15) farmTip = '🌾 Ideal for rabi crops (wheat, mustard, potato). Good germination conditions.';
+    else if (temp <= 25) farmTip = '🌱 Excellent conditions for most crops. Monitor soil moisture.';
+    else if (temp <= 32) farmTip = '🌿 Ensure proper irrigation. Good for kharif crops.';
+    else farmTip = '🌡️ High temperature — water crops early morning. Protect sensitive crops.';
+
+    const weatherIcon = w.description.toLowerCase().includes('rain') ? '🌧️' :
+      w.description.toLowerCase().includes('cloud') ? '⛅' :
+      w.description.toLowerCase().includes('snow') ? '❄️' :
+      w.description.toLowerCase().includes('thunder') ? '⛈️' :
+      w.description.toLowerCase().includes('fog') ? '🌫️' : '☀️';
+
+    let forecastHtml = '';
+    if (w.forecast && w.forecast.length) {
+      forecastHtml = `
+        <div style="margin-top:6px;font-size:13px;opacity:.8">3-Day Forecast</div>
+        <div class="forecast-grid" style="margin-top:10px">
+          ${w.forecast.map(f => `
+            <div class="forecast-card">
+              <div class="forecast-date">${new Date(f.date).toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short'})}</div>
+              <div style="font-size:22px;margin-bottom:4px">☁️</div>
+              <div class="forecast-temp">${f.max}° / ${f.min}°</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${f.desc}</div>
+              <div style="font-size:11px;color:var(--blue);margin-top:2px">💧 ${f.rain_chance}%</div>
+            </div>`).join('')}
+        </div>`;
+    }
+
+    document.getElementById('weather-result').innerHTML = `
+      <div class="weather-main">
+        <div style="font-size:16px;opacity:.85;margin-bottom:8px">📍 ${w.city}${w.state ? ', ' + w.state : ''}, ${w.country}</div>
+        <div style="display:flex;align-items:flex-end;gap:16px">
+          <div>
+            <div style="font-size:16px;margin-bottom:4px">${weatherIcon}</div>
+            <div class="weather-temp">${w.temp_c}°C</div>
+          </div>
+          <div style="padding-bottom:8px">
+            <div class="weather-desc">${w.description}</div>
+            <div style="font-size:13px;opacity:.75;margin-top:4px">Feels like ${w.feels_like}°C</div>
+          </div>
+        </div>
+        ${forecastHtml}
+      </div>
+      <div class="weather-grid">
+        <div class="weather-card"><div class="weather-ic">💧</div><div class="weather-val">${w.humidity}%</div><div class="weather-lbl">Humidity</div></div>
+        <div class="weather-card"><div class="weather-ic">💨</div><div class="weather-val">${w.wind_speed} km/h</div><div class="weather-lbl">Wind Speed</div></div>
+        <div class="weather-card"><div class="weather-ic">☀️</div><div class="weather-val">UV ${w.uv}</div><div class="weather-lbl">UV Index</div></div>
+        <div class="weather-card"><div class="weather-ic">☁️</div><div class="weather-val">${w.cloud_cover}%</div><div class="weather-lbl">Cloud Cover</div></div>
+        <div class="weather-card"><div class="weather-ic">👁️</div><div class="weather-val">${w.visibility} km</div><div class="weather-lbl">Visibility</div></div>
+        <div class="weather-card"><div class="weather-ic">🌡️</div><div class="weather-val">${w.pressure} mb</div><div class="weather-lbl">Pressure</div></div>
+        <div class="weather-card" style="grid-column:span 2"><div style="font-size:20px;margin-bottom:6px">🌾</div><div class="weather-val" style="font-size:14px">${farmTip}</div></div>
+      </div>`;
+  } catch (err) {
+    document.getElementById('weather-result').innerHTML = `<div class="empty-state"><div class="empty-state-icon">⚠️</div><h3>Weather Unavailable</h3><p>${err.message}</p></div>`;
+  }
+}
+
+// ════════════════════════════════════════════
+//  KNOWLEDGE HUB
+// ════════════════════════════════════════════
+const articles = [
+  { title:'Kharif Season Planning Guide 2024', cat:'Seasonal Guide', emoji:'🌾', time:'4 min', author:'Agri Expert', date:'Nov 1, 2024', bg:'linear-gradient(135deg,#fef9c3,#fde68a)' },
+  { title:'PM-KISAN: Complete Guide to Benefits', cat:'Government Schemes', emoji:'🏛️', time:'6 min', author:'Policy Team', date:'Oct 28, 2024', bg:'linear-gradient(135deg,#dbeafe,#bfdbfe)' },
+  { title:'From Zero to 5 Acres: A Farmer\'s Story', cat:'Success Stories', emoji:'🌟', time:'8 min', author:'Suresh K.', date:'Oct 15, 2024', bg:'linear-gradient(135deg,#dcfce7,#bbf7d0)' },
+  { title:'How to Market Your Produce Online', cat:'Marketing', emoji:'📢', time:'5 min', author:'Market Expert', date:'Oct 10, 2024', bg:'linear-gradient(135deg,#fce7f3,#fbcfe8)' },
+  { title:'Drip Irrigation: Save Water, Grow More', cat:'Farming Tips', emoji:'💧', time:'4 min', author:'Dr. Mehta', date:'Sep 25, 2024', bg:'linear-gradient(135deg,#e0f2fe,#bae6fd)' },
+  { title:'Organic Farming Certification Process', cat:'Farming Tips', emoji:'🌿', time:'7 min', author:'APEDA Team', date:'Sep 18, 2024', bg:'linear-gradient(135deg,#f0fdf4,#bbf7d0)' },
+];
+
+function renderArticles(list) {
+  document.getElementById('articles-grid').innerHTML = (list || articles).map(a => `
+    <div class="article-card">
+      <div class="article-img" style="background:${a.bg}">${a.emoji}</div>
+      <div class="article-body">
+        <div class="article-cat">${a.cat}</div>
+        <div class="article-title">${a.title}</div>
+        <div class="article-meta">📅 ${a.date} &nbsp;·&nbsp; ⏱ ${a.time} read</div>
+        <button class="btn btn-outline" style="margin-top:10px;font-size:12px;padding:6px 12px" onclick="showToast('Article opening...')">Read More →</button>
+      </div>
+    </div>`).join('');
+}
+
+function setKbFilter(f, btn) {
+  kbFilter = f;
+  document.querySelectorAll('.kbf').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderArticles(f === 'all' ? null : articles.filter(a => a.cat === f));
+}
+
+function filterArticles(q) {
+  renderArticles(q ? articles.filter(a => a.title.toLowerCase().includes(q.toLowerCase())) : (kbFilter === 'all' ? null : articles.filter(a => a.cat === kbFilter)));
+}
+
+// ════════════════════════════════════════════
+//  NEWS
+// ════════════════════════════════════════════
+const newsData = [
+  { tag:'policy', label:'Policy', title:'Government Announces MSP Hike for Rabi Crops 2024-25', desc:'The Cabinet Committee on Economic Affairs approved an increase in Minimum Support Price for major rabi crops, benefiting over 5 crore farmers.', date:'Dec 20, 2024' },
+  { tag:'market', label:'Market', title:'Onion Prices Stabilize After Export Curbs Lifted', desc:'Onion prices have come down to ₹18-22 per kg in major wholesale markets after the government lifted export restrictions.', date:'Dec 18, 2024' },
+  { tag:'weather', label:'Weather', title:'IMD Predicts Normal Rainfall for North India This Season', desc:'The Indian Meteorological Department has forecast normal to above-normal rainfall for northern and central India, boosting kharif crop prospects.', date:'Dec 15, 2024' },
+  { tag:'tech', label:'Technology', title:'AI-Powered Crop Disease Detection App Launched for Farmers', desc:'ICAR in partnership with a tech startup launched a free mobile app that uses AI to detect crop diseases from smartphone photos.', date:'Dec 12, 2024' },
+  { tag:'policy', label:'Policy', title:'Soil Health Card Scheme Revised with Digital Integration', desc:'The Agriculture Ministry updated the Soil Health Card scheme with digital portals, allowing farmers to access soil recommendations online.', date:'Dec 10, 2024' },
+  { tag:'market', label:'Market', title:'Wheat Export Demand Surges Amid Global Supply Concerns', desc:'Indian wheat has seen rising demand from Southeast Asian and Middle Eastern markets following supply disruptions in major exporting countries.', date:'Dec 8, 2024' },
+];
+
+function renderNews() {
+  document.getElementById('news-grid').innerHTML = newsData.map(n => `
+    <div class="news-card">
+      <span class="news-tag news-tag-${n.tag}">${n.label}</span>
+      <div class="news-title">${n.title}</div>
+      <div class="news-desc">${n.desc}</div>
+      <div class="news-date">📅 ${n.date}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════
+//  CONTACT
+// ════════════════════════════════════════════
+async function submitContact() {
+  const data = {
+    name: document.getElementById('c-name').value.trim(),
+    email: document.getElementById('c-email').value.trim(),
+    phone: document.getElementById('c-phone').value.trim(),
+    subject: document.getElementById('c-subject').value.trim(),
+    message: document.getElementById('c-msg').value.trim()
+  };
+  if (!data.name || !data.email || !data.message) return showToast('Please fill all required fields', 'error');
+  try {
+    await api('POST', '/contact', data);
+    document.getElementById('contact-success').style.display = 'block';
+    ['c-name','c-email','c-phone','c-subject','c-msg'].forEach(id => document.getElementById(id).value = '');
+    setTimeout(() => document.getElementById('contact-success').style.display = 'none', 5000);
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ════════════════════════════════════════════
+//  USER MANAGEMENT
+// ════════════════════════════════════════════
+async function loadUsers() {
+  try {
+    const users = await api('GET', '/users');
+    const tbody = document.getElementById('users-table');
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td>
+          <div class="font-bold">${u.name}</div>
+          <div style="font-size:12px;color:var(--muted)">${u.email}</div>
+        </td>
+        <td><span class="role-badge r-${u.role}">${u.role.charAt(0).toUpperCase()+u.role.slice(1)}</span></td>
+        <td>${u.location || '–'}</td>
+        <td>${new Date(u.created_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td>
+          <span class="status-badge ${u.status === 'active' ? 's-active' : 's-inactive'}">● ${u.status}</span>
+          ${u.verified ? '<span class="badge badge-premium" style="margin-left:4px">✓</span>' : ''}
+        </td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="toggleUserStatus(${u.id},'${u.status === 'active' ? 'inactive' : 'active'}')" style="margin-right:4px">
+            ${u.status === 'active' ? 'Disable' : 'Enable'}
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="toggleVerify(${u.id})" style="margin-right:4px">
+            ${u.verified ? 'Unverify' : 'Verify'}
+          </button>
+          <button class="btn btn-red btn-sm" onclick="deleteUser(${u.id})">Del</button>
+        </td>
+      </tr>`).join('');
+  } catch { showToast('Failed to load users', 'error'); }
+}
+
+async function toggleUserStatus(id, status) {
+  try { await api('PUT', `/users/${id}/status`, { status }); await loadUsers(); showToast(`User ${status === 'active' ? 'enabled' : 'disabled'}`, 'success'); } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function toggleVerify(id) {
+  try { await api('PUT', `/users/${id}/verify`, {}); await loadUsers(); showToast('Verification updated', 'success'); } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  try { await api('DELETE', `/users/${id}`); await loadUsers(); showToast('User deleted', 'success'); } catch (err) { showToast(err.message, 'error'); }
+}
+
+function openAddUserModal() { document.getElementById('modal-add-user').classList.add('open'); }
+
+async function addUser() {
+  const data = {
+    name: document.getElementById('nu-name').value.trim(),
+    email: document.getElementById('nu-email').value.trim(),
+    password: document.getElementById('nu-password').value,
+    role: document.getElementById('nu-role').value,
+    phone: document.getElementById('nu-phone').value.trim(),
+    location: document.getElementById('nu-location').value.trim(),
+  };
+  if (!data.name || !data.email || !data.password) return showToast('Please fill all required fields', 'error');
+  try {
+    await api('POST', '/users', data);
+    closeModal('modal-add-user');
+    await loadUsers();
+    showToast('User added!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ════════════════════════════════════════════
+//  SETTINGS
+// ════════════════════════════════════════════
+async function saveProfile() {
+  const data = {
+    name: document.getElementById('s-name').value.trim(),
+    location: document.getElementById('s-location').value.trim(),
+    phone: document.getElementById('s-phone').value.trim(),
+  };
+  if (!data.name) return showToast('Name is required', 'error');
+  try {
+    await api('PUT', '/auth/profile', data);
+    currentUser.name = data.name;
+    updateSidebar();
+    showToast('Profile updated!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+async function changePassword() {
+  const current = document.getElementById('s-cur-pw').value;
+  const newPassword = document.getElementById('s-new-pw').value;
+  const confirm = document.getElementById('s-con-pw').value;
+  if (!current || !newPassword) return showToast('Please fill all password fields', 'error');
+  if (newPassword !== confirm) return showToast('Passwords do not match', 'error');
+  try {
+    await api('PUT', '/auth/password', { current, newPassword });
+    ['s-cur-pw','s-new-pw','s-con-pw'].forEach(id => document.getElementById(id).value = '');
+    showToast('Password updated!', 'success');
+  } catch (err) { showToast(err.message, 'error'); }
+}
+
+// ════════════════════════════════════════════
+//  MODALS & TOAST
+// ════════════════════════════════════════════
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let toastTimer;
+function showToast(msg, type = '') {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════
+loadTrends();
+renderArticles();
+renderNews();
+
+if (token) {
+  document.getElementById('auth-screen').classList.remove('show');
+  document.getElementById('sidebar').style.display = 'flex';
+  document.querySelector('.main').style.display = 'block';
+  initApp();
+} else {
+  document.getElementById('auth-screen').classList.add('show');
+  document.getElementById('sidebar').style.display = 'none';
+  document.querySelector('.main').style.display = 'none';
+  // enter key on login
+  document.getElementById('l-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+  document.getElementById('l-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+}
+</script>
+</body>
+</html>
